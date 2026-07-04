@@ -1,34 +1,37 @@
 # Baktiyar uulu Marat — Portfolio
 
-React + Vite портфолио. RU/EN, тема «нить пути», офлайн-режим, форма на EmailJS.
+React + Vite портфолио. RU/EN, тема «нить пути», офлайн-режим, форма отправляет сообщения в Telegram через собственного бота.
 
 ## Запуск
 
 ```bash
 npm install
-npm run dev       # http://localhost:5173
+npm run dev       # http://localhost:5173 — фронтенд; /api/contact работает только через vercel dev или на деплое
 npm run build      # сборка в dist/
 npm run preview    # локальный просмотр сборки
 ```
 
-## Настройка EmailJS
+## Настройка формы обратной связи (Telegram)
 
-Форма в разделе «Контакты» отправляет письма через [EmailJS](https://www.emailjs.com/).
+Форма в разделе «Контакты» шлёт сообщения через serverless-функцию `api/contact.js` (Vercel Node function) в Telegram-бота — никакого стороннего email-сервиса, токен бота никогда не попадает в клиентский код.
 
-1. Создай аккаунт на emailjs.com, добавь Email Service и шаблон с полями `from_name`, `from_email`, `message`.
-2. Скопируй `.env.local.example` в `.env.local` и заполни:
+1. В Telegram напиши **@BotFather** → `/newbot`, придумай имя и юзернейм (заканчивается на `bot`). Он пришлёт токен вида `123456789:AAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`.
+2. Напиши что-нибудь новому боту (чтобы у него появился чат с тобой).
+3. Забери свой `chat_id`: открой в браузере `https://api.telegram.org/bot<ТВОЙ_ТОКЕН>/getUpdates` — в JSON будет `"chat":{"id":ЧИСЛО, ...}`.
+4. Скопируй `.env.local.example` в `.env.local` и заполни:
 
 ```
-VITE_EMAILJS_SERVICE_ID=service_xxxxxxx
-VITE_EMAILJS_TEMPLATE_ID=template_xxxxxxx
-VITE_EMAILJS_PUBLIC_KEY=xxxxxxxxxxxxxxx
+TELEGRAM_BOT_TOKEN=123456789:AAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TELEGRAM_CHAT_ID=123456789
 ```
 
-Без этих переменных форма покажет ошибку отправки (и подскажет написать в Telegram) — сайт при этом не падает.
+Эти переменные — **без префикса `VITE_`**, специально: Vite встраивает `VITE_*` переменные в клиентский бандл, а токен бота должен остаться только на сервере (доступен исключительно внутри `api/contact.js`).
+
+Без этих переменных форма покажет ошибку отправки (и подскажет написать в Telegram напрямую) — сайт при этом не падает.
 
 ## Деплой на Vercel
 
-Preset: **Vite**, Root Directory: `/`. Добавь те же три переменные окружения в настройках проекта Vercel (Production + Preview).
+Preset: **Vite**, Root Directory: `/`. Vercel сам подхватит `api/contact.js` как serverless-функцию — ничего дополнительно настраивать не нужно. Добавь те же две переменные окружения в настройках проекта Vercel (Production + Preview + Development).
 
 ## Файлы, которые нужно положить вручную
 
