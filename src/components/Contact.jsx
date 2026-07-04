@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import emailjs from '@emailjs/browser'
+import { Mail, Send, GitFork } from 'lucide-react'
 import { useLang } from '../context/LangContext'
 import ThreadNode from './ThreadNode'
 
 const DIRECT = [
-  { name: 'Email', href: 'mailto:xxxzm.05@gmail.com', icon: '✉️', display: 'xxxzm.05@gmail.com' },
-  { name: 'Telegram', href: 'https://t.me/xxxzm05', icon: '✈️', display: '@xxxzm05' },
-  { name: 'GitHub', href: 'https://github.com/maratkgz', icon: '🐙', display: 'github.com/maratkgz' },
+  { name: 'Email', href: 'mailto:xxxzm.05@gmail.com', Icon: Mail, display: 'xxxzm.05@gmail.com' },
+  { name: 'Telegram', href: 'https://t.me/xxxzm05', Icon: Send, display: '@xxxzm05' },
+  { name: 'GitHub', href: 'https://github.com/maratkgz', Icon: GitFork, display: 'github.com/maratkgz' },
 ]
 
 export default function Contact() {
@@ -142,7 +143,7 @@ export default function Contact() {
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-              {DIRECT.map(({ name, href, icon, display }) => (
+              {DIRECT.map(({ name, href, Icon, display }) => (
                 <a
                   key={name}
                   href={href}
@@ -172,7 +173,7 @@ export default function Contact() {
                     e.currentTarget.style.color = 'var(--text-muted)'
                   }}
                 >
-                  <span aria-hidden="true">{icon}</span>
+                  <Icon size={17} strokeWidth={1.8} aria-hidden="true" />
                   {display}
                 </a>
               ))}

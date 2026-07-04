@@ -2,6 +2,7 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { useLang } from '../context/LangContext'
 import ThreadNode from './ThreadNode'
+import icons from '../data/icons'
 
 export default function Skills() {
   const { t } = useLang()
@@ -40,7 +41,9 @@ export default function Skills() {
           }}
           className="skills-grid"
         >
-          {skillsUI.groups.map((group, gi) => (
+          {skillsUI.groups.map((group, gi) => {
+            const Icon = icons[group.icon]
+            return (
             <motion.div
               key={group.category}
               initial={{ opacity: 0, y: 30 }}
@@ -61,7 +64,7 @@ export default function Skills() {
                   marginBottom: 'var(--space-3)',
                 }}
               >
-                <span aria-hidden="true">{group.icon}</span>
+                <Icon size={15} strokeWidth={1.8} color="var(--ember)" aria-hidden="true" />
                 {group.category}
               </span>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
@@ -77,7 +80,8 @@ export default function Skills() {
                 ))}
               </div>
             </motion.div>
-          ))}
+            )
+          })}
         </div>
       </div>
 

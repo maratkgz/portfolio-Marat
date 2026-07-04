@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
+import { Zap } from 'lucide-react'
 import { useLang } from '../context/LangContext'
 import ThreadNode from './ThreadNode'
 
@@ -330,6 +331,9 @@ export default function Hero() {
                 position: 'absolute',
                 top: 'var(--space-4)',
                 right: 'var(--space-4)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
                 fontFamily: 'var(--font-mono)',
                 fontSize: 'var(--text-xs)',
                 letterSpacing: '0.08em',
@@ -341,7 +345,8 @@ export default function Hero() {
                 pointerEvents: 'none',
               }}
             >
-              ⚡ {t.hero.energyLabel} {charge}
+              <Zap size={13} strokeWidth={2} fill="var(--ember)" aria-hidden="true" />
+              {t.hero.energyLabel} {charge}
             </div>
 
             {charge === 0 && (

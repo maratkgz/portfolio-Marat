@@ -1,6 +1,9 @@
 import { writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { Cookie, Calendar, FolderKanban, Wallet, NotebookPen } from 'lucide-react'
 import sharp from 'sharp'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -29,7 +32,14 @@ function dotGrid(seed) {
   return dots
 }
 
-function buildSvg({ kicker, title, tag, icon, seed }) {
+function iconMarkup(IconComponent) {
+  const svg = renderToStaticMarkup(
+    createElement(IconComponent, { size: 240, strokeWidth: 1.15, color: '#daf1de' }),
+  )
+  return `<g transform="translate(${W - 480}, ${H / 2 - 120})" opacity="0.9">${svg}</g>`
+}
+
+function buildSvg({ kicker, title, tag, IconComponent, seed }) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
   <defs>
     <radialGradient id="glow" cx="80%" cy="38%" r="55%">
@@ -47,7 +57,7 @@ function buildSvg({ kicker, title, tag, icon, seed }) {
   <text x="108" y="230" font-family="'Arial', sans-serif" font-weight="700" font-size="56" fill="#daf1de">${title}</text>
   <text x="112" y="272" font-family="'JetBrains Mono', monospace" font-size="17" fill="#9dbcad">${tag}</text>
 
-  <text x="${W - 260}" y="${H / 2 + 60}" font-size="220" fill="#daf1de" opacity="0.9">${icon}</text>
+  ${iconMarkup(IconComponent)}
 </svg>`
 }
 
@@ -57,7 +67,7 @@ const covers = [
     kicker: 'E-COMMERCE · РЕАЛЬНЫЙ КЛИЕНТ',
     title: 'AIDAN cookies',
     tag: 'Express + MongoDB → Firebase',
-    icon: '\u{1F36A}',
+    IconComponent: Cookie,
     seed: 1,
   },
   {
@@ -65,7 +75,7 @@ const covers = [
     kicker: 'ОПЕРАЦИИ · РЕСТОРАН',
     title: 'White Rabbit',
     tag: 'React · Node.js · SQLite',
-    icon: '\u{1F4C5}',
+    IconComponent: Calendar,
     seed: 2,
   },
   {
@@ -73,7 +83,7 @@ const covers = [
     kicker: 'КОД · УПРАВЛЕНИЕ',
     title: 'Приёмная',
     tag: 'React · PostgreSQL · Prisma · VPS',
-    icon: '\u{1F5C2}',
+    IconComponent: FolderKanban,
     seed: 3,
   },
   {
@@ -81,7 +91,7 @@ const covers = [
     kicker: 'PWA · СЕМЕЙНЫЙ БЮДЖЕТ',
     title: 'Бирге',
     tag: 'React · Vite · Firebase',
-    icon: '\u{1F4B0}',
+    IconComponent: Wallet,
     seed: 4,
   },
   {
@@ -89,7 +99,7 @@ const covers = [
     kicker: 'ОБРАЗОВАНИЕ · 160 ВОПРОСОВ',
     title: 'Квиз ГАК',
     tag: 'Vite · React · Tailwind',
-    icon: '\u{1F4DD}',
+    IconComponent: NotebookPen,
     seed: 5,
   },
 ]

@@ -40,7 +40,7 @@ const content = {
       ctaResume: 'Скачать резюме ↓',
       ctaProjects: 'Посмотреть проекты →',
       scroll: 'scroll',
-      energyHint: 'Кликни по ядру ⚡',
+      energyHint: 'Кликни по ядру',
       energyLabel: 'ЗАРЯД',
     },
 
@@ -68,17 +68,17 @@ const content = {
       title: 'Три роли, один процесс',
       items: [
         {
-          icon: '💻',
+          icon: 'code',
           title: 'Разработчик',
           text: 'Полный цикл: идея → дизайн → код → деплой. React, Vite, Firebase, Node.js. Фронтенд, бэкенд, базы данных, PWA.',
         },
         {
-          icon: '🗂',
+          icon: 'ops',
           title: 'Ассистент руководителя',
           text: 'Планирование, документы, коммуникации, контроль задач. Настолько понимаю эту работу, что написал для неё собственный софт.',
         },
         {
-          icon: '📈',
+          icon: 'marketing',
           title: 'SMM-маркетолог',
           text: 'Контент, ведение соцсетей, позиционирование, UTM-аналитика, инвесторские материалы. Продукт мало сделать — его надо продать.',
         },
@@ -107,22 +107,22 @@ const content = {
       title: 'Мой стек',
       groups: [
         {
-          icon: '💻',
+          icon: 'code',
           category: 'Разработка',
           skills: ['JavaScript (ES6+)', 'React 18', 'Vite', 'CSS3/HTML5', 'Framer Motion', 'Node.js', 'Express', 'REST API', 'Firebase (Auth, Firestore, Hosting)', 'PostgreSQL', 'Prisma ORM', 'MongoDB', 'SQLite', 'PWA', 'i18n', 'Git/GitHub', 'Vercel', 'VPS (Linux)', 'Figma', 'Адаптивная вёрстка'],
         },
         {
-          icon: '📈',
+          icon: 'marketing',
           category: 'Маркетинг',
           skills: ['SMM и ведение соцсетей', 'Контент-план', 'Позиционирование продукта', 'UTM-аналитика', 'Инвесторские материалы', 'Маркетинговые тексты', 'Продуктовая упаковка', 'Instagram-трафик'],
         },
         {
-          icon: '🗂',
+          icon: 'ops',
           category: 'Организация',
           skills: ['Планирование и приоритизация', 'Документооборот', 'Деловая переписка', 'Организация встреч', 'Контроль задач', 'Автоматизация рутины', 'Конфиденциальность'],
         },
         {
-          icon: '🤝',
+          icon: 'people',
           category: 'Личные качества',
           skills: ['Многозадачность', 'Самообучаемость', 'Системное мышление', 'Ответственность', 'Внимание к деталям', 'Быстрая адаптация', 'Доведение до результата', 'Коммуникабельность', 'Эмпатия к пользователю', 'Визуальное мышление'],
         },
@@ -236,7 +236,7 @@ const content = {
       ctaResume: 'Download CV ↓',
       ctaProjects: 'View Projects →',
       scroll: 'scroll',
-      energyHint: 'Click the core ⚡',
+      energyHint: 'Click the core',
       energyLabel: 'CHARGE',
     },
 
@@ -264,17 +264,17 @@ const content = {
       title: 'Three roles, one process',
       items: [
         {
-          icon: '💻',
+          icon: 'code',
           title: 'Developer',
           text: 'Full cycle: idea → design → code → deploy. React, Vite, Firebase, Node.js. Frontend, backend, databases, PWA.',
         },
         {
-          icon: '🗂',
+          icon: 'ops',
           title: 'Executive Assistant',
           text: 'Planning, documents, communication, task tracking. I understand this job well enough to have written my own software for it.',
         },
         {
-          icon: '📈',
+          icon: 'marketing',
           title: 'SMM Marketer',
           text: "Content, social media management, positioning, UTM analytics, investor materials. Building a product isn't enough — it has to sell.",
         },
@@ -303,22 +303,22 @@ const content = {
       title: 'My stack',
       groups: [
         {
-          icon: '💻',
+          icon: 'code',
           category: 'Development',
           skills: ['JavaScript (ES6+)', 'React 18', 'Vite', 'CSS3/HTML5', 'Framer Motion', 'Node.js', 'Express', 'REST API', 'Firebase (Auth, Firestore, Hosting)', 'PostgreSQL', 'Prisma ORM', 'MongoDB', 'SQLite', 'PWA', 'i18n', 'Git/GitHub', 'Vercel', 'VPS (Linux)', 'Figma', 'Responsive layout'],
         },
         {
-          icon: '📈',
+          icon: 'marketing',
           category: 'Marketing',
           skills: ['SMM & social media management', 'Content planning', 'Product positioning', 'UTM analytics', 'Investor materials', 'Marketing copy', 'Product packaging', 'Instagram traffic'],
         },
         {
-          icon: '🗂',
+          icon: 'ops',
           category: 'Operations',
           skills: ['Planning & prioritization', 'Document management', 'Business correspondence', 'Meeting organization', 'Task tracking', 'Routine automation', 'Confidentiality'],
         },
         {
-          icon: '🤝',
+          icon: 'people',
           category: 'Soft skills',
           skills: ['Multitasking', 'Self-learning', 'Systems thinking', 'Accountability', 'Attention to detail', 'Fast adaptation', 'Follow-through', 'Communication', 'User empathy', 'Visual thinking'],
         },

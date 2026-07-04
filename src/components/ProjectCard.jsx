@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
+import { GitFork, ExternalLink } from 'lucide-react'
 import { useLang } from '../context/LangContext'
 
 export default function ProjectCard({ project }) {
@@ -120,7 +121,7 @@ export default function ProjectCard({ project }) {
                   touchAction: 'manipulation',
                 }}
               >
-                ⌥ {t.projectsUI.source}
+                <GitFork size={14} strokeWidth={1.8} aria-hidden="true" /> {t.projectsUI.source}
               </a>
             )}
             {liveUrl && (
@@ -140,7 +141,7 @@ export default function ProjectCard({ project }) {
                   touchAction: 'manipulation',
                 }}
               >
-                ↗ {t.projectsUI.website}
+                <ExternalLink size={14} strokeWidth={1.8} aria-hidden="true" /> {t.projectsUI.website}
               </a>
             )}
           </div>
