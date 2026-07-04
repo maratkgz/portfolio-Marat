@@ -2,7 +2,8 @@ const QUESTIONS = [
   { key: 'Тип проекта', text: 'Какой тип проекта вас интересует? (сайт, бот, мобильное приложение, другое)' },
   { key: 'Бюджет', text: 'Какой бюджет закладываете?' },
   { key: 'Сроки', text: 'Какие сроки нужны?' },
-  { key: 'Контакты', text: 'Как с вами удобнее связаться? (телефон, email или просто продолжайте писать здесь)' },
+  { key: 'Email', text: 'Какой у вас email?' },
+  { key: 'Телефон', text: 'Какой у вас номер телефона?' },
 ]
 
 function buildChecklist(answers) {
@@ -76,16 +77,19 @@ export default async function handler(req, res) {
   if (nextIndex < QUESTIONS.length) {
     await sendMessage(token, chatId, `${checklist}\n\n${QUESTIONS[nextIndex].text}`, true)
   } else {
+    const from = message.from
+    const telegramHandle = from?.username ? `@${from.username}` : from?.first_name || 'не указан'
+    answers['Telegram'] = telegramHandle
+    const finalChecklist = buildChecklist(answers)
+
     await sendMessage(
       token,
       chatId,
-      `Спасибо! Вот что записал:\n\n${checklist}\n\nСвяжусь с вами в ближайшее время 🙌`,
+      `Спасибо! Вот что записал:\n\n${finalChecklist}\n\nСвяжусь с вами в ближайшее время 🙌`,
     )
 
     if (ownerChatId && String(ownerChatId) !== String(chatId)) {
-      const from = message.from
-      const who = from?.username ? `@${from.username}` : from?.first_name || 'клиент'
-      await sendMessage(token, ownerChatId, `📋 Новая заявка от ${who}:\n\n${checklist}`)
+      await sendMessage(token, ownerChatId, `📋 Новая заявка от ${telegramHandle}:\n\n${finalChecklist}`)
     }
   }
 
