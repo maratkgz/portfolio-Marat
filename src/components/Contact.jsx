@@ -1,53 +1,59 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import emailjs from '@emailjs/browser'
+import { useLang } from '../context/LangContext'
+import ThreadNode from './ThreadNode'
 
-const SOCIAL = [
-  {
-    name: 'GitHub',
-    href: 'https://github.com/maratbaktiyar',
-    icon: '🐙',
-    label: 'GitHub профиль Марата',
-  },
-  {
-    name: 'LinkedIn',
-    href: 'https://linkedin.com/in/maratbaktiyar',
-    icon: '💼',
-    label: 'LinkedIn профиль Марата',
-  },
-  {
-    name: 'Telegram',
-    href: 'https://t.me/xzmm0505050',
-    icon: '✈️',
-    label: 'Telegram Марата',
-  },
+const DIRECT = [
+  { name: 'Email', href: 'mailto:xxxzm.05@gmail.com', icon: '✉️', display: 'xxxzm.05@gmail.com' },
+  { name: 'Telegram', href: 'https://t.me/xxxzm05', icon: '✈️', display: '@xxxzm05' },
+  { name: 'GitHub', href: 'https://github.com/maratkgz', icon: '🐙', display: 'github.com/maratkgz' },
 ]
 
 export default function Contact() {
+  const { t, lang } = useLang()
+  const { contactUI } = t
+  const form = contactUI.form
+
   const formRef = useRef(null)
   const [fields, setFields] = useState({ name: '', email: '', message: '' })
   const [status, setStatus] = useState('idle') // idle | sending | success | error
   const [errors, setErrors] = useState({})
+  const [isOnline, setIsOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine)
+
+  useEffect(() => {
+    const goOnline = () => setIsOnline(true)
+    const goOffline = () => setIsOnline(false)
+    window.addEventListener('online', goOnline)
+    window.addEventListener('offline', goOffline)
+    return () => {
+      window.removeEventListener('online', goOnline)
+      window.removeEventListener('offline', goOffline)
+    }
+  }, [])
 
   const validate = () => {
     const e = {}
-    if (!fields.name.trim())    e.name    = 'Введите имя'
-    if (!fields.email.trim())   e.email   = 'Введите email'
-    else if (!/\S+@\S+\.\S+/.test(fields.email)) e.email = 'Некорректный email'
-    if (!fields.message.trim()) e.message = 'Напишите сообщение'
+    if (!fields.name.trim()) e.name = form.errorName
+    if (!fields.email.trim()) e.email = form.errorEmail
+    else if (!/\S+@\S+\.\S+/.test(fields.email)) e.email = form.errorEmailInvalid
+    if (!fields.message.trim()) e.message = form.errorMessage
     return e
   }
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFields(prev => ({ ...prev, [name]: value }))
-    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }))
+    setFields((prev) => ({ ...prev, [name]: value }))
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }))
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     const errs = validate()
-    if (Object.keys(errs).length) { setErrors(errs); return }
+    if (Object.keys(errs).length) {
+      setErrors(errs)
+      return
+    }
 
     setStatus('sending')
     try {
@@ -66,7 +72,7 @@ export default function Contact() {
 
   const inputStyle = (hasError) => ({
     width: '100%',
-    background: 'rgba(30,46,43,0.6)',
+    background: 'rgba(15,40,35,0.6)',
     border: `1.5px solid ${hasError ? 'var(--ember)' : 'var(--border-subtle)'}`,
     borderRadius: 'var(--radius-sm)',
     padding: 'var(--space-3) var(--space-4)',
@@ -74,13 +80,16 @@ export default function Contact() {
     fontFamily: 'var(--font-body)',
     fontSize: 'var(--text-base)',
     outline: 'none',
-    transition: 'border-color var(--transition)',
+    transition: 'border-color 0.15s',
     boxSizing: 'border-box',
+    minHeight: '44px',
   })
 
   return (
     <section id="contact" style={{ background: 'var(--forest)' }}>
-      <div className="container section-wrapper">
+      <div className="container section-wrapper thread-end">
+        <ThreadNode id="contact" label={t.thread.contact} />
+
         <motion.span
           className="section-label"
           initial={{ opacity: 0, y: 20 }}
@@ -88,7 +97,7 @@ export default function Contact() {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          Контакты
+          {contactUI.label}
         </motion.span>
 
         <motion.h2
@@ -98,16 +107,18 @@ export default function Contact() {
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.1 }}
         >
-          Напишите мне
+          {contactUI.title}
         </motion.h2>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1.2fr',
-          gap: 'var(--space-12)',
-          alignItems: 'start',
-        }} className="contact-grid">
-
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1.2fr',
+            gap: 'var(--space-12)',
+            alignItems: 'start',
+          }}
+          className="contact-grid"
+        >
           {/* Left — info */}
           <motion.div
             initial={{ opacity: 0, x: -24 }}
@@ -115,18 +126,29 @@ export default function Contact() {
             viewport={{ once: true }}
             transition={{ duration: 0.65 }}
           >
-            <p style={{ fontSize: 'var(--text-lg)', marginBottom: 'var(--space-8)', lineHeight: 1.7 }}>
-              Открыт к предложениям о работе, стажировке и интересным проектам. Отвечу в течение суток.
+            <p style={{ fontSize: 'var(--text-lg)', marginBottom: 'var(--space-2)', lineHeight: 1.7 }}>
+              {contactUI.subtitle}
+            </p>
+            <p
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 'var(--text-xs)',
+                color: 'var(--text-muted)',
+                letterSpacing: '0.05em',
+                marginBottom: 'var(--space-8)',
+              }}
+            >
+              {contactUI.location}
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-              {SOCIAL.map(({ name, href, icon, label }) => (
+              {DIRECT.map(({ name, href, icon, display }) => (
                 <a
                   key={name}
                   href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={label}
+                  target={name === 'Email' ? undefined : '_blank'}
+                  rel={name === 'Email' ? undefined : 'noopener noreferrer'}
+                  aria-label={`${name}: ${display}`}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -137,19 +159,21 @@ export default function Contact() {
                     color: 'var(--text-muted)',
                     fontFamily: 'var(--font-body)',
                     fontSize: 'var(--text-sm)',
-                    transition: 'all var(--transition)',
+                    transition: 'border-color 0.15s, color 0.15s',
+                    minHeight: '44px',
+                    touchAction: 'manipulation',
                   }}
-                  onMouseEnter={e => {
+                  onMouseEnter={(e) => {
                     e.currentTarget.style.borderColor = 'var(--ember)'
                     e.currentTarget.style.color = 'var(--mint)'
                   }}
-                  onMouseLeave={e => {
+                  onMouseLeave={(e) => {
                     e.currentTarget.style.borderColor = 'var(--border-subtle)'
                     e.currentTarget.style.color = 'var(--text-muted)'
                   }}
                 >
                   <span aria-hidden="true">{icon}</span>
-                  {name}
+                  {display}
                 </a>
               ))}
             </div>
@@ -169,6 +193,7 @@ export default function Contact() {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25 }}
                   style={{
                     padding: 'var(--space-10)',
                     border: '1px solid rgba(236,94,39,0.35)',
@@ -179,15 +204,11 @@ export default function Contact() {
                 >
                   <div style={{ fontSize: '2.5rem', marginBottom: 'var(--space-4)' }} aria-hidden="true">✓</div>
                   <h3 style={{ color: 'var(--mint)', fontFamily: 'var(--font-display)', marginBottom: 'var(--space-2)' }}>
-                    Отправлено ✓
+                    {form.sentTitle}
                   </h3>
-                  <p style={{ fontSize: 'var(--text-sm)' }}>Спасибо! Свяжусь с вами в ближайшее время.</p>
-                  <button
-                    onClick={() => setStatus('idle')}
-                    className="btn btn-outline"
-                    style={{ marginTop: 'var(--space-6)' }}
-                  >
-                    Написать ещё
+                  <p style={{ fontSize: 'var(--text-sm)' }}>{form.sentText}</p>
+                  <button onClick={() => setStatus('idle')} className="btn btn-outline" style={{ marginTop: 'var(--space-6)' }}>
+                    {form.sendAnother}
                   </button>
                 </motion.div>
               ) : (
@@ -200,6 +221,7 @@ export default function Contact() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
                 >
                   {/* Name */}
                   <div>
@@ -207,7 +229,7 @@ export default function Contact() {
                       htmlFor="contact-name"
                       style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', color: 'var(--text-muted)', display: 'block', marginBottom: 'var(--space-2)', letterSpacing: '0.08em', textTransform: 'uppercase' }}
                     >
-                      Имя
+                      {form.name}
                     </label>
                     <input
                       id="contact-name"
@@ -216,10 +238,10 @@ export default function Contact() {
                       autoComplete="name"
                       value={fields.name}
                       onChange={handleChange}
-                      placeholder="Ваше имя"
+                      placeholder={form.namePlaceholder}
                       style={inputStyle(errors.name)}
-                      onFocus={e => e.target.style.borderColor = 'var(--ember)'}
-                      onBlur={e => e.target.style.borderColor = errors.name ? 'var(--ember)' : 'var(--border-subtle)'}
+                      onFocus={(e) => (e.target.style.borderColor = 'var(--ember)')}
+                      onBlur={(e) => (e.target.style.borderColor = errors.name ? 'var(--ember)' : 'var(--border-subtle)')}
                       aria-describedby={errors.name ? 'error-name' : undefined}
                       aria-invalid={!!errors.name}
                     />
@@ -232,7 +254,7 @@ export default function Contact() {
                       htmlFor="contact-email"
                       style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', color: 'var(--text-muted)', display: 'block', marginBottom: 'var(--space-2)', letterSpacing: '0.08em', textTransform: 'uppercase' }}
                     >
-                      Email
+                      {form.email}
                     </label>
                     <input
                       id="contact-email"
@@ -241,10 +263,10 @@ export default function Contact() {
                       autoComplete="email"
                       value={fields.email}
                       onChange={handleChange}
-                      placeholder="your@email.com"
+                      placeholder={form.emailPlaceholder}
                       style={inputStyle(errors.email)}
-                      onFocus={e => e.target.style.borderColor = 'var(--ember)'}
-                      onBlur={e => e.target.style.borderColor = errors.email ? 'var(--ember)' : 'var(--border-subtle)'}
+                      onFocus={(e) => (e.target.style.borderColor = 'var(--ember)')}
+                      onBlur={(e) => (e.target.style.borderColor = errors.email ? 'var(--ember)' : 'var(--border-subtle)')}
                       aria-describedby={errors.email ? 'error-email' : undefined}
                       aria-invalid={!!errors.email}
                     />
@@ -257,7 +279,7 @@ export default function Contact() {
                       htmlFor="contact-message"
                       style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', color: 'var(--text-muted)', display: 'block', marginBottom: 'var(--space-2)', letterSpacing: '0.08em', textTransform: 'uppercase' }}
                     >
-                      Сообщение
+                      {form.message}
                     </label>
                     <textarea
                       id="contact-message"
@@ -265,10 +287,10 @@ export default function Contact() {
                       rows={5}
                       value={fields.message}
                       onChange={handleChange}
-                      placeholder="Расскажите о проекте или предложении..."
+                      placeholder={form.messagePlaceholder}
                       style={{ ...inputStyle(errors.message), resize: 'vertical', minHeight: '120px' }}
-                      onFocus={e => e.target.style.borderColor = 'var(--ember)'}
-                      onBlur={e => e.target.style.borderColor = errors.message ? 'var(--ember)' : 'var(--border-subtle)'}
+                      onFocus={(e) => (e.target.style.borderColor = 'var(--ember)')}
+                      onBlur={(e) => (e.target.style.borderColor = errors.message ? 'var(--ember)' : 'var(--border-subtle)')}
                       aria-describedby={errors.message ? 'error-message' : undefined}
                       aria-invalid={!!errors.message}
                     />
@@ -277,22 +299,28 @@ export default function Contact() {
 
                   {status === 'error' && (
                     <p style={{ fontSize: 'var(--text-sm)', color: 'var(--ember)' }}>
-                      Не удалось отправить. Попробуйте ещё раз или напишите напрямую.
+                      {form.errorNetwork}
+                    </p>
+                  )}
+
+                  {!isOnline && (
+                    <p style={{ fontSize: 'var(--text-sm)', color: 'var(--ember)' }}>
+                      {form.offlineNotice}
                     </p>
                   )}
 
                   <button
                     type="submit"
                     className="btn btn-primary"
-                    disabled={status === 'sending'}
+                    disabled={status === 'sending' || !isOnline}
                     style={{
                       width: '100%',
                       justifyContent: 'center',
-                      opacity: status === 'sending' ? 0.7 : 1,
-                      cursor: status === 'sending' ? 'wait' : 'pointer',
+                      opacity: status === 'sending' || !isOnline ? 0.6 : 1,
+                      cursor: status === 'sending' || !isOnline ? 'not-allowed' : 'pointer',
                     }}
                   >
-                    {status === 'sending' ? 'Отправляю...' : 'Отправить →'}
+                    {status === 'sending' ? form.sending : form.send}
                   </button>
                 </motion.form>
               )}

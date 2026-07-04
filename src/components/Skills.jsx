@@ -1,37 +1,17 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-
-const skillGroups = [
-  {
-    category: 'Фронтенд',
-    skills: ['React', 'JavaScript', 'HTML5', 'CSS3'],
-  },
-  {
-    category: 'Бэкенд',
-    skills: ['Node.js', 'Express', 'Python'],
-  },
-  {
-    category: 'Базы данных',
-    skills: ['MongoDB', 'SQL'],
-  },
-  {
-    category: 'Инструменты',
-    skills: ['Git', 'Figma', 'VS Code', 'Vite'],
-  },
-  {
-    category: 'Доступность',
-    skills: ['WCAG', 'Визуальный UX', '🤟 КЖЯ/РЖЯ'],
-  },
-  {
-    category: 'Soft Skills',
-    skills: ['Аналитика', 'Эмпатия', 'Обучаемость', 'Коммуникация'],
-  },
-]
+import { useLang } from '../context/LangContext'
+import ThreadNode from './ThreadNode'
 
 export default function Skills() {
+  const { t } = useLang()
+  const { skillsUI } = t
+
   return (
     <section id="skills" style={{ background: 'var(--forest)' }}>
       <div className="container section-wrapper">
+        <ThreadNode id="skills" label={t.thread.skills} />
+
         <motion.span
           className="section-label"
           initial={{ opacity: 0, y: 20 }}
@@ -39,7 +19,7 @@ export default function Skills() {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          Навыки
+          {skillsUI.label}
         </motion.span>
 
         <motion.h2
@@ -49,15 +29,18 @@ export default function Skills() {
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.1 }}
         >
-          Мой стек
+          {skillsUI.title}
         </motion.h2>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: 'var(--space-8)',
-        }} className="skills-grid">
-          {skillGroups.map((group, gi) => (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: 'var(--space-8)',
+          }}
+          className="skills-grid"
+        >
+          {skillsUI.groups.map((group, gi) => (
             <motion.div
               key={group.category}
               initial={{ opacity: 0, y: 30 }}
@@ -65,15 +48,20 @@ export default function Skills() {
               viewport={{ once: true, margin: '-40px' }}
               transition={{ duration: 0.55, delay: gi * 0.08 }}
             >
-              <span style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 'var(--text-xs)',
-                color: 'var(--text-muted)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                display: 'block',
-                marginBottom: 'var(--space-3)',
-              }}>
+              <span
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 'var(--text-xs)',
+                  color: 'var(--text-muted)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  marginBottom: 'var(--space-3)',
+                }}
+              >
+                <span aria-hidden="true">{group.icon}</span>
                 {group.category}
               </span>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
@@ -82,15 +70,7 @@ export default function Skills() {
                     key={skill}
                     className="tag"
                     whileHover={{ scale: 1.05 }}
-                    style={{
-                      padding: 'var(--space-2) var(--space-4)',
-                      fontSize: 'var(--text-sm)',
-                      ...(skill.includes('КЖЯ') ? {
-                        borderColor: 'var(--ember)',
-                        color: 'var(--ember)',
-                        fontWeight: 600,
-                      } : {}),
-                    }}
+                    style={{ padding: 'var(--space-2) var(--space-4)', fontSize: 'var(--text-sm)' }}
                   >
                     {skill}
                   </motion.span>

@@ -1,5 +1,7 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
+import { useLang } from '../context/LangContext'
+import ThreadNode from './ThreadNode'
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 32 },
@@ -7,85 +9,201 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.7, delay, ease: [0.4, 0, 0.2, 1] },
 })
 
-function DotGrid() {
+const EMBER = '#ec5e27'
+const MINT = 'rgba(218,241,222,0.85)'
+const SHELLS = [
+  { count: 9, radiusRatio: 0.22, speed: 0.014 },
+  { count: 13, radiusRatio: 0.36, speed: -0.009 },
+  { count: 17, radiusRatio: 0.48, speed: 0.006 },
+]
+const POINTER_RADIUS = 85
+const POINTER_STRENGTH = 1.1
+const BURST_RADIUS = 220
+const BURST_STRENGTH = 26
+
+// Interactive "energy core": orbiting particles pulled toward the pointer,
+// click/tap fires a radial impulse — replaces the static dot grid with
+// something the visitor can actually push around.
+function EnergyCore({ onCharge }) {
   const canvasRef = useRef(null)
+  const pointerRef = useRef({ x: -999, y: -999, active: false })
+  const flashRef = useRef(0)
+  const particlesRef = useRef([])
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     let animId
     let t = 0
 
     const resize = () => {
-      canvas.width  = canvas.offsetWidth  * window.devicePixelRatio
+      canvas.width = canvas.offsetWidth * window.devicePixelRatio
       canvas.height = canvas.offsetHeight * window.devicePixelRatio
+      ctx.setTransform(1, 0, 0, 1, 0, 0)
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
     }
     resize()
     window.addEventListener('resize', resize)
 
-    const COLS = 14
-    const ROWS = 18
-    const EMBER = '#ec5e27'
-    const MINT  = 'rgba(218,241,222,0.18)'
+    if (!particlesRef.current.length) {
+      const particles = []
+      SHELLS.forEach((shell, shellIndex) => {
+        for (let i = 0; i < shell.count; i++) {
+          particles.push({
+            shellIndex,
+            angle: (i / shell.count) * Math.PI * 2,
+            angularSpeed: shell.speed,
+            radiusRatio: shell.radiusRatio,
+            size: shellIndex === 0 ? 3 : 2,
+            isEmber: (i + shellIndex) % 4 === 0,
+            dispX: 0,
+            dispY: 0,
+            velX: 0,
+            velY: 0,
+          })
+        }
+      })
+      particlesRef.current = particles
+    }
 
-    const draw = () => {
+    const handlePointerMove = (e) => {
+      const rect = canvas.getBoundingClientRect()
+      pointerRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top, active: true }
+    }
+    const handlePointerLeave = () => {
+      pointerRef.current.active = false
+    }
+    const handleClick = (e) => {
+      const rect = canvas.getBoundingClientRect()
+      const cx = e.clientX - rect.left
+      const cy = e.clientY - rect.top
+      particlesRef.current.forEach((p) => {
+        const w = canvas.offsetWidth
+        const h = canvas.offsetHeight
+        const cxOrigin = w / 2
+        const cyOrigin = h / 2
+        const minDim = Math.min(w, h)
+        const baseX = cxOrigin + Math.cos(p.angle) * p.radiusRatio * minDim
+        const baseY = cyOrigin + Math.sin(p.angle) * p.radiusRatio * minDim
+        const x = baseX + p.dispX
+        const y = baseY + p.dispY
+        const dx = x - cx
+        const dy = y - cy
+        const dist = Math.hypot(dx, dy) || 0.001
+        const impulse = BURST_STRENGTH * Math.max(0, 1 - dist / BURST_RADIUS)
+        p.velX += (dx / dist) * impulse
+        p.velY += (dy / dist) * impulse
+      })
+      flashRef.current = 1
+      onCharge?.((c) => c + 1)
+      if (reduceMotion) drawFrame()
+    }
+
+    canvas.addEventListener('pointermove', handlePointerMove)
+    canvas.addEventListener('pointerleave', handlePointerLeave)
+    canvas.addEventListener('click', handleClick)
+
+    function drawFrame() {
       const w = canvas.offsetWidth
       const h = canvas.offsetHeight
+      const cx = w / 2
+      const cy = h / 2
+      const minDim = Math.min(w, h)
       ctx.clearRect(0, 0, w, h)
 
-      const colGap = w / (COLS + 1)
-      const rowGap = h / (ROWS + 1)
+      const { x: px, y: py, active } = pointerRef.current
+      flashRef.current *= 0.92
 
-      for (let r = 1; r <= ROWS; r++) {
-        for (let c = 1; c <= COLS; c++) {
-          const x = c * colGap
-          const y = r * rowGap
+      // core glow
+      const pulse = reduceMotion ? 0 : Math.sin(t * 1.4) * 3
+      const coreRadius = 16 + pulse + flashRef.current * 14
+      const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreRadius * 2.6)
+      gradient.addColorStop(0, `rgba(236,94,39,${0.9 + flashRef.current * 0.1})`)
+      gradient.addColorStop(0.5, 'rgba(236,94,39,0.25)')
+      gradient.addColorStop(1, 'rgba(236,94,39,0)')
+      ctx.beginPath()
+      ctx.arc(cx, cy, coreRadius * 2.6, 0, Math.PI * 2)
+      ctx.fillStyle = gradient
+      ctx.fill()
 
-          // Wave offset
-          const wave = Math.sin(t * 0.6 + c * 0.5 + r * 0.3) * 0.5 + 0.5
-          const dist = Math.sqrt((c - COLS / 2) ** 2 + (r - ROWS / 2) ** 2)
-          const glow = Math.max(0, 1 - dist / 9)
+      ctx.beginPath()
+      ctx.arc(cx, cy, coreRadius, 0, Math.PI * 2)
+      ctx.fillStyle = EMBER
+      ctx.fill()
 
-          if (wave > 0.78 && glow > 0.2) {
-            ctx.beginPath()
-            ctx.arc(x, y, 2.5, 0, Math.PI * 2)
-            ctx.fillStyle = EMBER
-            ctx.globalAlpha = wave * glow
-            ctx.fill()
-          } else {
-            ctx.beginPath()
-            ctx.arc(x, y, 1.5, 0, Math.PI * 2)
-            ctx.fillStyle = MINT
-            ctx.globalAlpha = 0.6 + wave * 0.4
-            ctx.fill()
+      particlesRef.current.forEach((p) => {
+        if (!reduceMotion) p.angle += p.angularSpeed
+        const baseX = cx + Math.cos(p.angle) * p.radiusRatio * minDim
+        const baseY = cy + Math.sin(p.angle) * p.radiusRatio * minDim
+
+        if (active) {
+          const dx = px - (baseX + p.dispX)
+          const dy = py - (baseY + p.dispY)
+          const dist = Math.hypot(dx, dy)
+          if (dist < POINTER_RADIUS && dist > 0.001) {
+            const f = (1 - dist / POINTER_RADIUS) * POINTER_STRENGTH
+            p.velX += (dx / dist) * f
+            p.velY += (dy / dist) * f
           }
         }
-      }
 
+        p.velX *= 0.9
+        p.velY *= 0.9
+        p.dispX += p.velX
+        p.dispY += p.velY
+        p.dispX *= 0.94
+        p.dispY *= 0.94
+
+        const x = baseX + p.dispX
+        const y = baseY + p.dispY
+
+        ctx.beginPath()
+        ctx.arc(x, y, p.size, 0, Math.PI * 2)
+        ctx.fillStyle = p.isEmber ? EMBER : MINT
+        ctx.globalAlpha = p.isEmber ? 0.85 : 0.55
+        ctx.fill()
+      })
       ctx.globalAlpha = 1
-      t += 0.018
+    }
+
+    const draw = () => {
+      drawFrame()
+      t += 0.02
       animId = requestAnimationFrame(draw)
     }
-    draw()
+
+    if (reduceMotion) {
+      drawFrame()
+    } else {
+      draw()
+    }
 
     return () => {
       window.removeEventListener('resize', resize)
-      cancelAnimationFrame(animId)
+      canvas.removeEventListener('pointermove', handlePointerMove)
+      canvas.removeEventListener('pointerleave', handlePointerLeave)
+      canvas.removeEventListener('click', handleClick)
+      if (animId) cancelAnimationFrame(animId)
     }
-  }, [])
+  }, [onCharge])
 
   return (
     <canvas
       ref={canvasRef}
+      role="button"
+      tabIndex={-1}
       aria-hidden="true"
-      style={{ width: '100%', height: '100%', display: 'block' }}
+      style={{ width: '100%', height: '100%', display: 'block', cursor: 'pointer', touchAction: 'manipulation' }}
     />
   )
 }
 
 export default function Hero() {
+  const { t } = useLang()
+  const [charge, setCharge] = useState(0)
+
   const scrollToProjects = (e) => {
     e.preventDefault()
     document.querySelector('#projects')?.scrollIntoView({ behavior: 'smooth' })
@@ -94,6 +212,7 @@ export default function Hero() {
   return (
     <section
       id="hero"
+      className="section-wrapper thread-start"
       style={{
         minHeight: '100vh',
         display: 'flex',
@@ -106,41 +225,35 @@ export default function Hero() {
         paddingBottom: 'var(--space-16)',
       }}
     >
+      <ThreadNode id="hero" label={t.thread.hero} />
+
       <div className="container" style={{ width: '100%' }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 'var(--space-12)',
-          alignItems: 'center',
-        }}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: 'var(--space-12)',
+            alignItems: 'center',
+          }}
           className="hero-grid"
         >
           {/* Left — text */}
-          <div style={{ paddingLeft: 'var(--space-8)', position: 'relative' }}>
-            {/* Ember thread */}
-            <div style={{
-              position: 'absolute',
-              left: 0,
-              top: '8px',
-              bottom: '8px',
-              width: '2px',
-              background: 'linear-gradient(to bottom, var(--ember), rgba(236,94,39,0.2))',
-            }} aria-hidden="true" />
-
+          <div style={{ position: 'relative' }}>
             <motion.span
               className="section-label"
               style={{ marginBottom: 'var(--space-4)' }}
               {...fadeUp(0.1)}
             >
-              Привет, я — Марат
+              {t.hero.kicker}
             </motion.span>
 
             <motion.h1
               style={{ color: 'var(--mint)', lineHeight: 1.08, marginBottom: 'var(--space-4)' }}
               {...fadeUp(0.2)}
             >
-              Baktiyar uulu<br />
-              <span style={{ color: 'var(--ember)' }}>Marat</span>
+              {t.hero.titleLine1}
+              <br />
+              <span style={{ color: 'var(--ember)' }}>{t.hero.titleName}</span>
             </motion.h1>
 
             <motion.p
@@ -148,12 +261,12 @@ export default function Hero() {
                 fontFamily: 'var(--font-display)',
                 fontSize: 'var(--text-xl)',
                 color: 'var(--text-muted)',
-                fontWeight: 500,
+                fontWeight: 600,
                 marginBottom: 'var(--space-6)',
               }}
               {...fadeUp(0.3)}
             >
-              Full-Stack Developer &amp; IT Student
+              {t.hero.subtitle}
             </motion.p>
 
             <motion.blockquote
@@ -169,10 +282,9 @@ export default function Hero() {
               }}
               {...fadeUp(0.4)}
             >
-              Я воспринимаю мир иначе —<br />
-              <span style={{ color: 'var(--text-muted)' }}>
-                и именно это делает мои решения нестандартными
-              </span>
+              {t.hero.quoteLine1}
+              <br />
+              <span style={{ color: 'var(--text-muted)' }}>{t.hero.quoteLine2}</span>
             </motion.blockquote>
 
             <motion.div
@@ -180,15 +292,15 @@ export default function Hero() {
               {...fadeUp(0.5)}
             >
               <a href="/cv-marat.pdf" download className="btn btn-primary">
-                Скачать резюме ↓
+                {t.hero.ctaResume}
               </a>
               <a href="#projects" onClick={scrollToProjects} className="btn btn-outline">
-                Посмотреть проекты →
+                {t.hero.ctaProjects}
               </a>
             </motion.div>
           </div>
 
-          {/* Right — dot grid */}
+          {/* Right — interactive energy core */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -197,19 +309,62 @@ export default function Hero() {
               height: '460px',
               borderRadius: 'var(--radius-lg)',
               overflow: 'hidden',
-              background: 'rgba(30, 46, 43, 0.5)',
+              background: 'rgba(15, 40, 35, 0.5)',
               border: '1px solid var(--border-subtle)',
               position: 'relative',
             }}
           >
-            <DotGrid />
-            {/* Overlay gradient */}
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'radial-gradient(circle at 50% 50%, transparent 40%, var(--forest) 90%)',
-              pointerEvents: 'none',
-            }} aria-hidden="true" />
+            <EnergyCore onCharge={setCharge} />
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'radial-gradient(circle at 50% 50%, transparent 40%, var(--forest) 90%)',
+                pointerEvents: 'none',
+              }}
+              aria-hidden="true"
+            />
+
+            <div
+              style={{
+                position: 'absolute',
+                top: 'var(--space-4)',
+                right: 'var(--space-4)',
+                fontFamily: 'var(--font-mono)',
+                fontSize: 'var(--text-xs)',
+                letterSpacing: '0.08em',
+                color: 'var(--ember)',
+                background: 'rgba(15,40,35,0.7)',
+                border: '1px solid var(--ember-mid)',
+                borderRadius: 'var(--radius-full)',
+                padding: '6px 14px',
+                pointerEvents: 'none',
+              }}
+            >
+              ⚡ {t.hero.energyLabel} {charge}
+            </div>
+
+            {charge === 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.4, duration: 0.6 }}
+                style={{
+                  position: 'absolute',
+                  bottom: 'var(--space-4)',
+                  left: 0,
+                  right: 0,
+                  textAlign: 'center',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 'var(--text-xs)',
+                  color: 'var(--text-muted)',
+                  letterSpacing: '0.05em',
+                  pointerEvents: 'none',
+                }}
+              >
+                {t.hero.energyHint}
+              </motion.div>
+            )}
           </motion.div>
         </div>
 
@@ -235,13 +390,15 @@ export default function Hero() {
             transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
             aria-hidden="true"
           />
-          <span style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 'var(--text-xs)',
-            color: 'var(--text-muted)',
-            letterSpacing: '0.1em',
-          }}>
-            scroll
+          <span
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 'var(--text-xs)',
+              color: 'var(--text-muted)',
+              letterSpacing: '0.1em',
+            }}
+          >
+            {t.hero.scroll}
           </span>
         </motion.div>
       </div>

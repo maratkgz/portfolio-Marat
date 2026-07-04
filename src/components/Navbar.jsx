@@ -1,15 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-
-const navLinks = [
-  { label: 'О себе',    href: '#about'    },
-  { label: 'Проекты',   href: '#projects'  },
-  { label: 'Навыки',    href: '#skills'    },
-  { label: 'Путь',      href: '#timeline'  },
-  { label: 'Контакты',  href: '#contact'   },
-]
+import { useLang } from '../context/LangContext'
 
 export default function Navbar() {
+  const { lang, toggleLang, t } = useLang()
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -34,9 +28,7 @@ export default function Navbar() {
         right: 0,
         zIndex: 100,
         padding: scrolled ? '12px 0' : '20px 0',
-        background: scrolled
-          ? 'rgba(22, 56, 50, 0.92)'
-          : 'transparent',
+        background: scrolled ? 'rgba(15, 40, 35, 0.92)' : 'transparent',
         backdropFilter: scrolled ? 'blur(16px)' : 'none',
         borderBottom: scrolled ? '1px solid rgba(218, 241, 222, 0.08)' : 'none',
         transition: 'all 0.35s cubic-bezier(0.4,0,0.2,1)',
@@ -49,7 +41,7 @@ export default function Navbar() {
         {/* Logo */}
         <a
           href="#hero"
-          onClick={e => handleLink(e, '#hero')}
+          onClick={(e) => handleLink(e, '#hero')}
           style={{
             fontFamily: 'var(--font-mono)',
             fontSize: 'var(--text-sm)',
@@ -58,8 +50,10 @@ export default function Navbar() {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
+            minHeight: '44px',
+            touchAction: 'manipulation',
           }}
-          aria-label="На главную"
+          aria-label={t.nav.logoAria}
         >
           <span style={{ color: 'var(--ember)', fontWeight: 700 }}>MB</span>
           <span style={{ color: 'var(--text-muted)' }}>/</span>
@@ -67,69 +61,128 @@ export default function Navbar() {
         </a>
 
         {/* Desktop nav */}
-        <nav style={{ display: 'flex', gap: 'var(--space-8)', alignItems: 'center' }}
+        <nav
+          style={{ display: 'flex', gap: 'var(--space-8)', alignItems: 'center' }}
           className="nav-desktop"
-          aria-label="Основная навигация"
+          aria-label={lang === 'ru' ? 'Основная навигация' : 'Main navigation'}
         >
-          {navLinks.map(link => (
+          {t.nav.links.map((link) => (
             <a
               key={link.href}
               href={link.href}
-              onClick={e => handleLink(e, link.href)}
+              onClick={(e) => handleLink(e, link.href)}
               style={{
                 fontFamily: 'var(--font-body)',
                 fontSize: 'var(--text-sm)',
                 color: 'var(--text-muted)',
                 fontWeight: 500,
-                transition: 'color var(--transition)',
-                position: 'relative',
+                transition: 'color 0.15s',
               }}
-              onMouseEnter={e => e.target.style.color = 'var(--mint)'}
-              onMouseLeave={e => e.target.style.color = 'var(--text-muted)'}
+              onMouseEnter={(e) => (e.target.style.color = 'var(--mint)')}
+              onMouseLeave={(e) => (e.target.style.color = 'var(--text-muted)')}
             >
               {link.label}
             </a>
           ))}
+
+          <button
+            onClick={toggleLang}
+            aria-label={t.nav.switchLangAria}
+            style={{
+              display: 'flex',
+              gap: '6px',
+              fontFamily: 'var(--font-mono)',
+              fontSize: 'var(--text-xs)',
+              letterSpacing: '0.05em',
+              background: 'none',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: 'var(--radius-full)',
+              padding: '6px 12px',
+              cursor: 'pointer',
+              minHeight: '44px',
+              touchAction: 'manipulation',
+            }}
+          >
+            <span style={{ color: lang === 'ru' ? 'var(--ember)' : 'var(--text-muted)', fontWeight: lang === 'ru' ? 700 : 400 }}>RU</span>
+            <span style={{ color: 'var(--text-muted)' }}>|</span>
+            <span style={{ color: lang === 'en' ? 'var(--ember)' : 'var(--text-muted)', fontWeight: lang === 'en' ? 700 : 400 }}>EN</span>
+          </button>
+
           <a
             href="/cv-marat.pdf"
             download
             className="btn btn-outline"
-            style={{ padding: '8px 20px', fontSize: 'var(--text-xs)' }}
+            style={{ padding: '8px 20px', fontSize: 'var(--text-xs)', minHeight: 'auto' }}
           >
-            Резюме ↓
+            {t.nav.resume}
           </a>
         </nav>
 
-        {/* Mobile burger */}
-        <button
-          className="nav-burger"
-          onClick={() => setMenuOpen(v => !v)}
-          aria-label={menuOpen ? 'Закрыть меню' : 'Открыть меню'}
-          aria-expanded={menuOpen}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            display: 'none',
-            flexDirection: 'column',
-            gap: '5px',
-            padding: '4px',
-          }}
-        >
-          {[0, 1, 2].map(i => (
-            <span key={i} style={{
-              display: 'block', width: '24px', height: '2px',
-              background: 'var(--mint)',
-              transition: 'all 0.3s',
-              transform: menuOpen
-                ? i === 0 ? 'translateY(7px) rotate(45deg)'
-                : i === 2 ? 'translateY(-7px) rotate(-45deg)'
-                : 'scaleX(0)'
-                : 'none',
-              opacity: menuOpen && i === 1 ? 0 : 1,
-            }} />
-          ))}
-        </button>
+        {/* Mobile controls */}
+        <div className="nav-mobile-controls" style={{ display: 'none', alignItems: 'center', gap: 'var(--space-3)' }}>
+          <button
+            onClick={toggleLang}
+            aria-label={t.nav.switchLangAria}
+            style={{
+              display: 'flex',
+              gap: '6px',
+              fontFamily: 'var(--font-mono)',
+              fontSize: 'var(--text-xs)',
+              background: 'none',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: 'var(--radius-full)',
+              padding: '6px 10px',
+              cursor: 'pointer',
+              minHeight: '44px',
+              touchAction: 'manipulation',
+            }}
+          >
+            <span style={{ color: lang === 'ru' ? 'var(--ember)' : 'var(--text-muted)', fontWeight: lang === 'ru' ? 700 : 400 }}>RU</span>
+            <span style={{ color: 'var(--text-muted)' }}>|</span>
+            <span style={{ color: lang === 'en' ? 'var(--ember)' : 'var(--text-muted)', fontWeight: lang === 'en' ? 700 : 400 }}>EN</span>
+          </button>
+
+          <button
+            className="nav-burger"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label={menuOpen ? t.nav.menuClose : t.nav.menuOpen}
+            aria-expanded={menuOpen}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '5px',
+              padding: '10px',
+              minHeight: '44px',
+              minWidth: '44px',
+              justifyContent: 'center',
+              touchAction: 'manipulation',
+            }}
+          >
+            {[0, 1, 2].map((i) => (
+              <span
+                key={i}
+                style={{
+                  display: 'block',
+                  width: '24px',
+                  height: '2px',
+                  background: 'var(--mint)',
+                  transition: 'all 0.2s',
+                  transform: menuOpen
+                    ? i === 0
+                      ? 'translateY(7px) rotate(45deg)'
+                      : i === 2
+                        ? 'translateY(-7px) rotate(-45deg)'
+                        : 'scaleX(0)'
+                    : 'none',
+                  opacity: menuOpen && i === 1 ? 0 : 1,
+                }}
+              />
+            ))}
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu */}
@@ -139,9 +192,9 @@ export default function Navbar() {
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -16 }}
-            transition={{ duration: 0.25 }}
+            transition={{ duration: 0.2 }}
             style={{
-              background: 'rgba(22,56,50,0.97)',
+              background: 'rgba(15,40,35,0.97)',
               backdropFilter: 'blur(20px)',
               borderTop: '1px solid var(--border-subtle)',
               padding: 'var(--space-6)',
@@ -150,25 +203,26 @@ export default function Navbar() {
               gap: 'var(--space-4)',
             }}
           >
-            {navLinks.map(link => (
+            {t.nav.links.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
-                onClick={e => handleLink(e, link.href)}
+                onClick={(e) => handleLink(e, link.href)}
                 style={{
                   fontSize: 'var(--text-lg)',
                   fontFamily: 'var(--font-display)',
                   fontWeight: 600,
                   color: 'var(--mint)',
-                  padding: 'var(--space-2) 0',
+                  padding: 'var(--space-3) 0',
                   borderBottom: '1px solid var(--border-subtle)',
+                  minHeight: '44px',
                 }}
               >
                 {link.label}
               </a>
             ))}
             <a href="/cv-marat.pdf" download className="btn btn-primary" style={{ marginTop: 'var(--space-2)', justifyContent: 'center' }}>
-              Скачать резюме
+              {t.nav.resume}
             </a>
           </motion.div>
         )}
@@ -177,7 +231,7 @@ export default function Navbar() {
       <style>{`
         @media (max-width: 768px) {
           .nav-desktop { display: none !important; }
-          .nav-burger { display: flex !important; }
+          .nav-mobile-controls { display: flex !important; }
         }
       `}</style>
     </motion.header>

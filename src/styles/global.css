@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700&family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap&subset=cyrillic');
 @import './variables.css';
 
 *, *::before, *::after {
@@ -22,27 +22,65 @@ body {
   overflow-x: hidden;
 }
 
-/* Ember thread — vertical line running left edge of content */
+/* Ember thread — vertical line running the left edge of content, continuous through sections */
 .section-wrapper {
   position: relative;
-  padding-left: var(--space-8);
+  padding-left: var(--space-10);
 }
 
 .section-wrapper::before {
   content: '';
   position: absolute;
-  left: 0;
+  left: 14px;
   top: 0;
   bottom: 0;
   width: 2px;
-  background: linear-gradient(
-    to bottom,
-    transparent,
-    var(--ember) 15%,
-    var(--ember) 85%,
-    transparent
-  );
-  opacity: 0.6;
+  background: var(--ember);
+  opacity: 0.55;
+}
+
+.section-wrapper.thread-start::before {
+  background: linear-gradient(to bottom, transparent, var(--ember) 12%);
+}
+
+.section-wrapper.thread-end::before {
+  background: linear-gradient(to bottom, var(--ember) 88%, transparent);
+}
+
+/* Node straddles the thread line (line center at 15px); kept positive so it
+   never bleeds past the viewport edge on narrow screens (padding box origin
+   sits at x=0 there — a negative left would poke off-canvas). */
+.thread-node {
+  position: absolute;
+  left: 9px;
+  top: 6px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--charcoal);
+  border: 2px solid var(--ember);
+  opacity: 0.55;
+  transition: opacity var(--transition), background var(--transition), box-shadow var(--transition);
+}
+
+.thread-node.is-active {
+  opacity: 1;
+  background: var(--ember);
+  box-shadow: 0 0 0 4px var(--ember-dim);
+}
+
+.thread-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: var(--space-3);
+  transition: color var(--transition);
+}
+
+.thread-label.is-active {
+  color: var(--ember);
 }
 
 /* Layout */
@@ -91,7 +129,7 @@ img {
   border-radius: var(--radius-sm);
 }
 
-/* Buttons */
+/* Buttons — instant tap response, GPU-only transitions */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -102,10 +140,11 @@ img {
   font-weight: 600;
   font-size: var(--text-sm);
   cursor: pointer;
-  transition: all var(--transition);
+  transition: transform 0.15s cubic-bezier(0.4,0,0.2,1), box-shadow 0.15s cubic-bezier(0.4,0,0.2,1), border-color 0.15s, color 0.15s, background 0.15s;
   border: none;
   letter-spacing: 0.02em;
-  text-transform: none;
+  min-height: 44px;
+  touch-action: manipulation;
 }
 
 .btn-primary {
@@ -119,6 +158,10 @@ img {
   box-shadow: 0 8px 24px rgba(236, 94, 39, 0.35);
 }
 
+.btn-primary:active {
+  transform: translateY(0) scale(0.98);
+}
+
 .btn-outline {
   background: transparent;
   color: var(--mint);
@@ -129,6 +172,10 @@ img {
   border-color: var(--ember);
   color: var(--ember);
   transform: translateY(-2px);
+}
+
+.btn-outline:active {
+  transform: translateY(0) scale(0.98);
 }
 
 /* Section label */
@@ -165,13 +212,39 @@ img {
   font-size: var(--text-xs);
   color: var(--mint);
   background: transparent;
-  transition: all var(--transition);
+  transition: border-color 0.15s, color 0.15s;
   white-space: nowrap;
 }
 
 .tag:hover {
   border-color: var(--ember);
   color: var(--ember);
+}
+
+/* Filter pill button */
+.filter-pill {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.05em;
+  padding: var(--space-2) var(--space-5);
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  min-height: 44px;
+  touch-action: manipulation;
+  transition: transform 0.15s, background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.filter-pill:active {
+  transform: scale(0.96);
+}
+
+.filter-pill.is-active {
+  background: var(--ember);
+  border-color: var(--ember);
+  color: var(--white);
 }
 
 /* Divider */
@@ -200,7 +273,9 @@ img {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
@@ -211,7 +286,19 @@ img {
   }
 
   .section-wrapper {
-    padding-left: var(--space-6);
+    padding-left: var(--space-8);
+  }
+
+  .section-wrapper::before {
+    width: 1px;
+  }
+
+  .thread-label {
+    display: none;
+  }
+
+  .thread-label {
+    font-size: 10px;
   }
 
   .container {
